@@ -123,7 +123,7 @@ const challengeDifficultySelect = document.getElementById('challenge-difficulty'
 const searchInput = document.getElementById('search-code');
 const roomCodeDiv = document.getElementById('room-code');
 
-const BASE_URL = 'http://172.20.10.2:3000'; // Replace with your server's IP
+const BASE_URL = 'https://sudoku-backend-wm0m.onrender.com'; //'http://172.20.10.2:3000'; // Replace with your server's IP
 let room_Code = '';
 
 function updateHeader(mode) {
@@ -914,11 +914,13 @@ document.body.addEventListener('click', (event) => {
     }
 });
 
+/*
 // Toggle the color palette visibility
 paintButton.addEventListener('click', () => {
     colorPalette.style.display = colorPalette.style.display === 'flex' ? 'none' : 'flex';
     event.stopPropagation(); // Prevent closing immediately when clicking on the paint button
 });
+*/
 
 // Handle color selection from the palette
 colorPalette.addEventListener('click', (event) => {
