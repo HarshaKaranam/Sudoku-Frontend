@@ -1,0 +1,623 @@
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #2d3748;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    max-width: min(90vw, 600px);
+    margin: auto;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 90vh;
+    position: relative;
+}
+
+#room-code {
+    position: absolute; /* Position relative to the container */
+    top: 1.5rem; /* Distance from the top */
+    right: 1rem; /* Distance from the right */
+    font-size: smaller;
+}
+
+/* Side Panel */
+#side-panel {
+    text-align: left;
+    max-width: 0.4*min(90vw, 600px);
+    margin: 0;
+    padding: 1.5rem;
+    position: absolute;
+    top: 6px;
+    left: -23px;
+    height: min(90vh, 800px);
+    border-radius: 16px;
+    background-color: #2d3748;
+    color: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    z-index: -999;
+}
+
+#side-panel.show {
+    z-index: 999;
+}
+
+
+
+/* Hamburger menu icon */
+#hamburger-menu {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #2d3748;
+}
+
+#game-mode-header {
+    position: relative;
+    top: -10px;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 500;
+    color: #1a365d;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    flex-grow: 1; /* Push title to occupy available space */
+    text-align: center;
+}
+
+#side-panel ul {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+#side-panel ul li {
+    margin: 1rem 0;
+}
+
+#side-panel ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+#side-panel ul li a:hover {
+    color: #4299e1;
+}
+
+#side-panel button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+}
+
+
+
+/* Hidden class to hide elements */
+.hidden {
+    display: none;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+#difficulty {
+    font-size: 0.7rem;
+    border-radius: 4px;
+}
+
+.difficulty {
+    font-size: 0.8rem;
+}
+
+#start-game{
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
+#challenge-friend {
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
+#timer {
+    
+    font-size: 0.8rem;
+    cursor: default;
+    padding: 0.25rem 0.25rem;
+    font-family: monospace;
+    background: #f7fafc;
+    
+    border-radius: 4px;
+    color: #4a5568;
+}
+
+button {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #4299e1;
+    color: white;
+}
+
+/* Sudoku board styling */
+#sudoku-board {
+    display: grid;
+    grid-template-rows: repeat(9, 1fr);
+    margin: 1rem auto;
+    width: min(100%, 400px);
+    aspect-ratio: 1 / 1;
+}
+
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+}
+
+.cell {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    font-size: 200%;
+    font-weight: 200;
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 0.2px #cbd5e0;
+    box-sizing: border-box;
+    cursor: default;
+}
+
+
+
+/* Borders for the 3x3 grids */
+.row:nth-child(3n) .cell {
+    border-bottom: 2px solid #333;
+}
+
+.cell:nth-child(3n) {
+    border-right: 2px solid #333;
+}
+
+.row:first-child .cell {
+    border-top: 2px solid #333;
+}
+
+.cell:first-child {
+    border-left: 2px solid #333;
+}
+
+.row:last-child .cell {
+    border-bottom: 2px solid #333;
+}
+
+.cell:last-child {
+    border-right: 2px solid #333;
+}
+
+
+/* Prefilled cells */
+.cell.prefilled {
+    color: #000;
+}
+
+.cell.user-entered {
+    color: #2366ad;
+}
+
+.cell.selected {
+    background-color: #82aede;
+}
+
+.cell.highlight {
+    background-color: #cfe4fb;
+}
+
+/* Number pad styling */
+#number-pad {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.number-btn {
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    width: 3rem;
+    height: 3rem;
+    cursor: pointer;
+    border-radius: 8px;
+    background-color: #4299e1;
+    color: white;
+    border: none;
+}
+
+.number-btn:hover {
+    background-color: #2b6cb0;
+}
+
+
+.button-container {
+    display: flex;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    position: relative;    
+}
+
+/* Pause and Notes Toggle button styling */
+#pause-game, #notes-toggle, #undo-move, #reset-board {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: none;
+    border-radius: 50%;
+    background-color: #4299e1;
+}
+
+#pause-game:hover, #notes-toggle:hover, #undo-move:hover, #reset-board:hover {
+    background-color: #2b6cb0;
+}
+
+.cell.locked {
+    background-color: #efecec87; /* Light gray to indicate locked state */
+    color: #6b7280; /* Muted text color */
+    cursor: not-allowed; /* Show not-allowed cursor */
+}
+
+
+/* Styling for cells in Notes mode */
+.cell.note-mode {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    color: #2b6cb0;
+}
+
+.cell.note-mode div {
+    font-size: 35%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    aspect-ratio: 1 / 1; /* Ensures the element remains a square */
+    font-weight: 400;
+    width: 80%;
+    margin: auto;
+}
+
+html, body {
+    touch-action: manipulation;
+}
+
+/* Positioning for each number in Notes mode */
+#sudoku-board .note-mode .note-1 { grid-area: 1 / 1; }
+#sudoku-board .note-mode .note-2 { grid-area: 1 / 2; }
+#sudoku-board .note-mode .note-3 { grid-area: 1 / 3; }
+#sudoku-board .note-mode .note-4 { grid-area: 2 / 1; }
+#sudoku-board .note-mode .note-5 { grid-area: 2 / 2; }
+#sudoku-board .note-mode .note-6 { grid-area: 2 / 3; }
+#sudoku-board .note-mode .note-7 { grid-area: 3 / 1; }
+#sudoku-board .note-mode .note-8 { grid-area: 3 / 2; }
+#sudoku-board .note-mode .note-9 { grid-area: 3 / 3; }
+
+
+/* Overlay text for Notes status */
+#notes-toggle .notes-status {
+    position: absolute;
+    top: -0.06rem;
+    width: 1.2rem;
+    
+    background-color: #ffffff00;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 0.2rem 0.3rem;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 1;
+}
+
+#erase-button {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: none;
+    border-radius: 50%;
+    background-color: #4299e1;
+    cursor: pointer;
+}
+
+#erase-button:hover {
+    background-color: #2b6cb0;
+}
+
+/* Highlight style for notes matching the selected number */
+.highlight-note {
+    border-radius: 50%; /* Rounded style for note highlights */
+    color: #2366ad; /* Distinct color for highlighted note numbers */
+    font-weight: bold;
+    border: 1px solid #000;
+}
+
+#paint-button {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 2px solid #9d9d9d00;
+    border-radius: 50%;
+    background-color: #4299e1;
+    cursor: pointer;
+}
+
+#paint-button:hover {
+    background-color: #2b6cb0;
+}
+
+#color-palette {
+    display: none; /* Start hidden by default */
+    gap: 0.5rem;
+    position: absolute;
+    top: -3.5rem; /* Position below the paint icon */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 100; /* Ensure it appears above other elements */
+}
+
+.color-option {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.color-option[data-color="#ff595e"] { background-color: #ff595e; }
+.color-option[data-color="#9d9d9d"] { background-color: #9d9d9d; }
+.color-option[data-color="#8ac926"] { background-color: #8ac926; }
+
+
+
+/* Base modal styling for all modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Modal content */
+.completion-modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
+}
+
+/* Show the modal */
+.modal1.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    position: relative;
+    background-color: white;
+    margin: 5vh auto;
+    padding: 1.5rem;
+    border-radius: 16px;
+    width: 90%;
+    max-width: min(80vw, 400px);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.close {
+    font-size: 2rem; /* Increase the size of the X */
+    font-weight: bold; /* Make the X more prominent */
+    color: #333; /* Set the color (you can adjust as needed) */
+    position: absolute; /* Position the X relative to its nearest positioned ancestor */
+    top: 10px; /* Move it slightly down from the top */
+    right: 15px; /* Move it slightly left from the right edge */
+    cursor: pointer; /* Change the cursor to a pointer for better UX */
+    z-index: 1; /* Ensure it stays above other elements in the modal */
+}
+
+
+#game-mode-header {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    color: #1a365d;
+    text-align: center;
+}
+
+#room-code {
+    font-size: 0.7rem;
+    color: #2d3748;
+    text-align: center;
+    margin-top: -0.5rem;
+}
+
+#room-code.hidden {
+    display: none;
+}
+
+#scoreboard {
+    position: fixed;
+    max-width: min(90vw, 450px);
+    bottom: 0; /* Initial state shows only the header */
+    height: 2.5rem; /* Height of the header only */
+    border-radius: 15px 15px 0 0; /* Rounded corners for the top */
+    width: 100%;
+    background-color: white;
+    box-shadow: 0px -5px 15px rgba(0, 0, 0, 0.2);
+    border-top: 2px solid #4299e1;
+    transition: height 0.3s ease-in-out;
+    z-index: 1000;
+    overflow: hidden; /* Hide content when collapsed */
+}
+
+#scoreboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #4299e1;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+#scoreboard-controls {
+    display: flex;
+    align-items: center;
+}
+
+#refresh-scoreboard {
+    margin-right: 10px;
+    background-color: white;
+    color: #4299e1;
+    border: 1px solid #4299e1;
+    border-radius: 5px;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+#toggle-arrow {
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#scoreboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    visibility: hidden; /* Hidden initially */
+    opacity: 0;
+    transition: visibility 0s, opacity 0.3s ease-in-out;
+}
+
+#scoreboard-table th,
+#scoreboard-table td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+}
+
+#scoreboard-table th {
+    background-color: #f7f7f7;
+}
+
+/* Expanded scoreboard styles */
+#scoreboard.expanded {
+    height: min(90vh, 800px); /* Full scoreboard height */
+    bottom: 0;
+}
+
+#scoreboard.expanded #scoreboard-table {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Show refresh button when expanded */
+#scoreboard.expanded #refresh-scoreboard {
+    display: inline-block;
+}
+
+#notification {
+    position: fixed;
+    top: 6%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffffff00;
+    color: rgb(122, 122, 122);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#notification.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+#notification.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
