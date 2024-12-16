@@ -449,13 +449,14 @@ let selectedCell = null;
 let selectedColor = '#9d9d9d00'; // Default color for notes
 
 // Load puzzles from sudoku_puzzles.json
+/*
 fetch('puzzles_with_codes.json')
     .then(response => response.json())
     .then(data => {
         puzzles = data;
         renderEmptyBoard();
     });
-
+*/
 
 // Toggle Notes mode on and off
 notesToggleButton.addEventListener('click', () => {
@@ -561,6 +562,45 @@ function updateCellValue(value) {
     }
 }
 
+// Function to update progress (percentage completed)
+async function updateProgress(roomCode, playerName) {
+    const percentageCompleted = calculatePercentageCompleted();
+
+    try {
+        await fetch(`${BASE_URL}/update-progress`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ roomCode, completed: percentageCompleted, playerName }),
+        });
+
+        console.log('Progress successfully updated!');
+        return percentageCompleted;
+    } catch (error) {
+        console.error('Error updating progress:', error);
+        throw error; // Rethrow the error for handling in the calling function
+    }
+}
+
+// Function to update time_taken if the puzzle is completed correctly
+async function updateTimeTaken(roomCode, playerName, timeTaken) {
+    try {
+        await fetch(`${BASE_URL}/update-time-taken`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ roomCode, playerName, timeTaken }),
+        });
+
+        console.log('Time successfully updated!');
+    } catch (error) {
+        console.error('Error updating time:', error);
+        throw error; // Rethrow the error for handling in the calling function
+    }
+}
+
 // Toggle regular input: Adds or removes the value in the cell
 function toggleRegularInput(cell, value) {
     if (cell.classList.contains('note-mode')) {
@@ -596,17 +636,25 @@ function checkForCompletion() {
         currentBoard[row][col] = cell.textContent ? parseInt(cell.textContent, 10) : 0;
     });
 
+    const playerName = localStorage.getItem('sudokuUserName'); // Fetch player name
+    const elapsedTime = time; // Current time in seconds
+    const roomCode = room_Code; // Room code for multiplayer
+    updateProgress(roomCode, playerName);
+    
     // Check if all cells are filled
     const isBoardComplete = currentBoard.flat().every(value => value !== 0);
 
     if (isBoardComplete) {
+
         if (compareBoards(currentBoard, currentSolution)) {
             // Pause the timer
             stopTimer();
+            // Update progress and time in the database
+            updateTimeTaken(roomCode, playerName, elapsedTime);
 
             // Display a congratulatory message with the elapsed time
-            const elapsedTime = formatTime(time);
-            showCompletionModal(`You've completed the puzzle in ${elapsedTime}.`);
+            const formattedTime = formatTime(elapsedTime);
+            showCompletionModal(`You've completed the puzzle in ${formattedTime}.`);
 
             // Lock the board to prevent further edits
             lockBoard();
@@ -626,6 +674,24 @@ function compareBoards(board, solution) {
         }
     }
     return true;
+}
+
+function calculatePercentageCompleted() {
+    const cells = document.querySelectorAll('.cell');
+    let totalUnfilledCells = 0;
+    let totalFilledCells = 0;
+
+    cells.forEach(cell => {
+        if (!cell.dataset.prefilled) {
+            totalUnfilledCells++;
+            if (cell.textContent.trim()) {
+                totalFilledCells++;
+            }
+        }
+    });
+
+    const percentageCompleted = Math.round((totalFilledCells / totalUnfilledCells) * 100);
+    return percentageCompleted;
 }
 
 function lockBoard() {
