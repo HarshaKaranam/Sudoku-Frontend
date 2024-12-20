@@ -4,15 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <title>Sudoku Game</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
+        <div id="pull-down-indicator" class="hidden">
+            <div class="spinner"></div>
+            <span>Refreshing...</span>
+        </div>        
         <div class="header-row">
             <h1 id="game-mode-header">SUDOKU</h1>
             <div id="room-code" class="hidden">Room Code: <span id="room-code-value"></span></div>
         </div>
+        <div id="notification" class="hidden"></div>
         <div class="controls">
             <div class="difficulty">
                 <label for="difficulty">Difficulty: </label>
@@ -71,21 +80,21 @@
             </button>
             -->
         </div>
-        <!-- Scoreboard Drawer -->
-        <div id="scoreboard" class="hidden">
+        <!-- Results Drawer -->
+        <div id="scoreboard">
             <div id="scoreboard-header">
-                <span>Scoreboard</span>
+                <span id="scoreboard-title">Leaderboard</span>
                 <div id="scoreboard-controls">
                     <button id="refresh-scoreboard" style="display: none;">Refresh</button>
-                    <span id="toggle-arrow">▲</span>
+                    <span id="toggle-arrow">▼</span>
                 </div>
             </div>
             <table id="scoreboard-table">
                 <thead>
                     <tr>
                         <th>Player Name</th>
-                        <th>Progress (%)</th>
-                        <th>Time Taken</th>
+                        <th id="progress-column">Progress (%)</th>
+                        <th>Time Taken (secs)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -106,7 +115,7 @@
             <button id="close-completion-modal">Close</button>
         </div>
     </div>
-    <div id="notification" class="hidden"></div>
+    
     <!-- Modal for Challenge a Friend -->
     <div id="challenge-modal" class="modal">
         <div class="modal-content">

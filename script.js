@@ -9,13 +9,72 @@ const eraseButton = document.getElementById('erase-button');
 const paintButton = document.getElementById('paint-button');
 const colorPalette = document.getElementById('color-palette');
 
+const scoreboard = document.getElementById("scoreboard");
+const scoreboardHeader = document.getElementById("scoreboard-header");
+const scoreboardTitle = document.getElementById('scoreboard-title');
+const progressColumn = document.getElementById('progress-column');
+const scoreboardTableBody = document.querySelector('#scoreboard-table tbody');
+const refreshScoreboardButton = document.getElementById('refresh-scoreboard');
+const toggleArrow = document.getElementById("toggle-arrow");
+
+let touchStartY = 0;
+let touchEndY = 0;
+const pullThreshold = 100; // Minimum distance to trigger a refresh
+const indicator = document.getElementById('pull-down-indicator');
+let gameMode = 'solo';
+
+// Function to show the pull-down indicator
+function showPullDownIndicator() {
+    indicator.classList.add('visible');
+}
+
+// Function to hide the pull-down indicator
+function hidePullDownIndicator() {
+    indicator.classList.remove('visible');
+}
+
+// Function to perform the refresh action
+function performRefresh() {
+    showPullDownIndicator();
+    setTimeout(() => {
+        location.reload(); // Refresh the page (or call your custom data fetch function here)
+    }, 1000);
+}
+
+// Handle touch start
+window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+});
+
+// Handle touch move
+window.addEventListener('touchmove', (e) => {
+    touchEndY = e.touches[0].clientY;
+
+    if (touchEndY - touchStartY > pullThreshold && window.scrollY === 0) {
+        showPullDownIndicator();
+    }
+});
+
+// Handle touch end
+window.addEventListener('touchend', () => {
+    if (touchEndY - touchStartY > pullThreshold && window.scrollY === 0) {
+        performRefresh();
+    } else {
+        hidePullDownIndicator();
+    }
+    touchStartY = 0;
+    touchEndY = 0;
+});
+
+
 const initialBoardState = []; // To store the initial state of the board
 document.getElementById('reset-board').addEventListener('click', () => {
     resetBoard();
-    moveHistory = [];
-    clearHighlights();
     clearSelectedCell();
+    clearHighlights();
+    moveHistory.length = 0;
 });
+
 function resetBoard() {
     const cells = document.querySelectorAll('.cell');
     cells.forEach((cell, index) => {
@@ -129,6 +188,9 @@ let room_Code = '';
 function updateHeader(mode) {
     const header = document.getElementById('game-mode-header');
     header.textContent = mode === 'solo' ? 'Sudoku - SOLO' : 'Sudoku - PARTY';
+    scoreboardTitle.textContent = mode === 'solo' ? 'Leaderboard' : 'Scoreboard';
+    progressColumn.style.display = mode === 'solo' ? 'none' : 'table-cell';
+    refreshScoreboardButton.style.display = mode === 'solo' ? 'none' : 'inline-block';
 }
 
 async function generateUniqueRoomCode() {
@@ -181,6 +243,20 @@ async function generateUniqueRoomCode() {
     return roomCode;
 }
 
+document.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+
+        // Add clicked class
+        btn.classList.add('clicked');
+
+        // Remove clicked class after animation duration
+        setTimeout(() => {
+            btn.classList.remove('clicked');
+        }, 100); // Match the transition duration
+    });
+});
+
 
 async function fetchPuzzleData(difficulty) {
     const response = await fetch(`${BASE_URL}/puzzle/${difficulty}`);
@@ -189,11 +265,6 @@ async function fetchPuzzleData(difficulty) {
     return puzzleData;
 }
 
-async function fetchLeaderboard(puzzleId) {
-    const response = await fetch(`${BASE_URL}/leaderboard/${puzzleId}`);
-    const leaderboard = await response.json();
-    console.log(leaderboard); // Display leaderboard on your website
-}
 
 async function fetchPuzzleDataById(id) {
     const response = await fetch(`${BASE_URL}/puzzle/id/${id}`);
@@ -358,7 +429,7 @@ startChallengedGameButton.addEventListener('click', () => {
     saveUserInputs();
     updateHeader('multiplayer');
     storeInitialBoardState();
-    scoreboard.classList.remove('hidden');
+    gameMode = 'multiplayer';
     roomCodeDiv.classList.remove('hidden');
     pauseButton.disabled = false; // Enable pause button
     pauseButton.innerHTML = '<i class="fas fa-pause"></i>';
@@ -439,6 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 let puzzles = {};
 let currentSolution = [];
+let currentId = '';
 let puzzleBackup;
 let userInputs = []; // Store user inputs when the game is paused
 let timer;
@@ -649,8 +721,12 @@ function checkForCompletion() {
         if (compareBoards(currentBoard, currentSolution)) {
             // Pause the timer
             stopTimer();
-            // Update progress and time in the database
-            updateTimeTaken(roomCode, playerName, elapsedTime);
+            if (gameMode === 'solo') {
+                addPlayerToLeaderboard(currentId, playerName, elapsedTime)
+            } else {
+                // Update progress and time in the database
+                updateTimeTaken(roomCode, playerName, elapsedTime);
+            }
 
             // Display a congratulatory message with the elapsed time
             const formattedTime = formatTime(elapsedTime);
@@ -859,13 +935,15 @@ async function startGame() {
     const puzzleData = await fetchPuzzleData(difficulty);
     puzzleBackup = convertToGrid(puzzleData.puzzle);
     currentSolution = convertToGrid(puzzleData.solution);
+    currentId = puzzleData.id;
     renderBoard(puzzleBackup);
     resetTimer();
     startTimer();
     saveUserInputs();
     updateHeader('solo');
+    gameMode = 'solo';
     storeInitialBoardState();
-    scoreboard.classList.add('hidden');
+    fetchLeaderboard(puzzleData.id);
     roomCodeDiv.classList.add('hidden');
     pauseButton.disabled = false;
     pauseButton.innerHTML = '<i class="fas fa-pause"></i>'; // Set to pause icon initially
@@ -1005,11 +1083,7 @@ document.addEventListener('click', (event) => {
     }
 });
 
-const scoreboard = document.getElementById("scoreboard");
-const scoreboardHeader = document.getElementById("scoreboard-header");
-const scoreboardTableBody = document.querySelector('#scoreboard-table tbody');
-const refreshScoreboardButton = document.getElementById('refresh-scoreboard');
-const toggleArrow = document.getElementById("toggle-arrow");
+
 
 
 scoreboardHeader.addEventListener("click", () => {
@@ -1017,9 +1091,9 @@ scoreboardHeader.addEventListener("click", () => {
         return;
     }
     const isExpanded = scoreboard.classList.toggle("expanded"); // Toggle the expanded class
-    toggleArrow.textContent = isExpanded ? "▼" : "▲";
-    refreshScoreboardButton.style.display = isExpanded ? "inline-block" : "none";
-    fetchScoreboard(room_Code);
+    toggleArrow.textContent = isExpanded ?  "▲" : "▼";
+    //refreshScoreboardButton.style.display = isExpanded ? "inline-block" : "none";
+    //fetchScoreboard(room_Code);
 });
 
 
@@ -1060,6 +1134,90 @@ refreshScoreboardButton.addEventListener("click", (event) => {
     console.log(room_Code)
     fetchScoreboard(room_Code)
 });
+
+async function fetchLeaderboard(puzzleId) {
+    try {
+        const response = await fetch(`${BASE_URL}/leaderboard/${puzzleId}`);
+        if (response.ok) {
+            const leaderboard = await response.json();
+
+            // Clear existing rows
+            scoreboardTableBody.innerHTML = '';
+
+            // Check if leaderboard data is empty
+            if (leaderboard.length === 0) {
+                // Display a message when no data is available
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="2" style="text-align: center; font-style: italic;">
+                        No data available
+                    </td>
+                `;
+                scoreboardTableBody.appendChild(row);
+                return; // Exit function early
+            }
+
+            // Populate the table with fetched scores
+            leaderboard.forEach(({ player_name, completion_time }) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${player_name}</td>
+                    <td>${completion_time}</td>
+                `;
+                scoreboardTableBody.appendChild(row);
+            });
+        } else {
+            console.error('Error fetching leaderboard:', response.statusText);
+            // Handle error gracefully
+            scoreboardTableBody.innerHTML = `
+                <tr>
+                    <td colspan="2" style="text-align: center; font-style: italic; color: red;">
+                        Failed to load leaderboard
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error('Network error while fetching leaderboard:', error);
+        // Handle network error gracefully
+        scoreboardTableBody.innerHTML = `
+            <tr>
+                <td colspan="2" style="text-align: center; font-style: italic; color: red;">
+                    Network error. Please try again later.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+async function addPlayerToLeaderboard(id, playerName, completionTime) {
+    const completionDate = new Date().toISOString(); // Capture the current date
+    try {
+        const response = await fetch(`${BASE_URL}/leaderboard`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id, // Puzzle code
+                playerName,
+                completionTime,
+                completionDate,
+            }),
+        });
+
+        if (response.ok) {
+            console.log('Player added to leaderboard!');
+            fetchLeaderboard(id); // Refresh leaderboard for the given puzzle code
+        } else {
+            console.error('Error adding player to leaderboard:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Network error while adding to leaderboard:', error);
+    }
+}
+
 
 // Refresh scoreboard on button click
 //refreshScoreboardButton.addEventListener('click', fetchScoreboard(room_Code));
